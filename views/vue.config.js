@@ -7,7 +7,7 @@ module.exports = defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: `http://localhost:3000`,
+        target: `https://node-vue-app-demo.vercel.app/`,
         changeOrigin: true,
         pathRewrite: {
           '^/api': '/'
