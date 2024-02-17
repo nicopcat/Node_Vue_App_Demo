@@ -4,6 +4,16 @@ const router = express.Router();
 const Article = require('../models/article');
 
 // 获取文章列表
+router.get('/', (req, res) => {
+  Article.find().sort({ createdAt: -1 }).then((articles) => {
+    // 处理查询到的文章数据
+    res.json({ articles});
+  }).catch((err) => {
+    console.log(err);
+  });
+});
+
+
 router.get('/articles', (req, res) => {
   Article.find().sort({ createdAt: -1 }).then((articles) => {
     // 处理查询到的文章数据
