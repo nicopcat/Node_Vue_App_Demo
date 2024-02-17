@@ -3,6 +3,7 @@ const bodyParse = require('body-parser');
 const mongoose = require('mongoose');
 require('dotenv').config()
 const router = require('./routes/articles');
+const path = require('path');
 
 
 const app = express();
@@ -16,7 +17,11 @@ mongoose.connection.once('open', ()=>{
 
 // routes
 app.use(router);
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/public/index.html'))
+});
 const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log("Server is running on port " + PORT)

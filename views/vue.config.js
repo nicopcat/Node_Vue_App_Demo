@@ -5,6 +5,7 @@ module.exports = defineConfig({
   outputDir:'dist',
   assetsDir:'static',
   devServer: {
+    host: '0.0.0.0',
     open: false,
     proxy: {
       '/api': {
