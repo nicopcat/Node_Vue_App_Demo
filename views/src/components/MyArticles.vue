@@ -23,6 +23,7 @@
 </template>
 <script>
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getArticles, createArticle, updateArticle, deleteArticle } from '@/api/article'
 
 export default {
   data() {
@@ -39,82 +40,92 @@ export default {
         content: '',
       },
       loading: false,
-      isNew: true
+      isNew: true,
+
     }
   },
   created() {
     this.getArticles();
   },
   methods: {
-    getArticles() {
-      this.loading = true
-      fetch('/api/articles')
-        .then(res =>
-          res.json()
+    async getArticles() {
+      try {
+        this.loading = true
+        const res = await getArticles()
+        console.log(res);
+
+        this.articles = res.articles
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async createArticle() {
+      try {
+        this.loading = true
+        const res = await createArticle(this.newData)
+        
+        if (res.code === 200) {
+          ElMessage({
+            type: 'success',
+            message: res.msg
+          })
+          this.newData = { title: '', author: '', content: '' }
+          await this.getArticles()
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateArticle(id) {
+      try {
+        this.loading = true
+        const res = await updateArticle(id, this.newData)
+        if (res.article) {
+          this.newData = { title: '', author: '', content: '' }
+          this.isNew = true
+          await this.getArticles()
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async del(row) {
+      try {
+        await ElMessageBox.confirm(
+          `确定要删除文章《${row.title}》?`,
+          'Warning',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }
         )
-        .then(data => {
-          this.articles = data.articles
-        })
-        .catch(err => console.log(err))
-        .finally(() => this.loading = false);
-    },
-    createArticle() {
-      this.loading = true
-      fetch('/api/articles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(this.newData)
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.code === 200) {
-            ElMessage({
-              type: 'success',
-              message: data.msg
-            })
-            this.newData = { title: '', author: '', content: '' };
-            this.getArticles();
-          }
-        })
-        .catch(err => console.log(err))
-        .finally(() => this.loading = false);
-    },
-    updateArticle(id) {
-      this.loading = true
-
-      fetch(`/api/articles/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(this.newData)
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.article) {
-            this.newData = { title: '', author: '', content: '' };
-            this.isNew = true;
-            this.getArticles();
-          }
-        })
-        .catch(err => console.log(err));
-    },
-    deleteArticle(id) {
-      this.loading = true
-
-      fetch(`/api/articles/${id}`, {
-        method: 'DELETE'
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.article) {
-            this.getArticles();
-          }
-        })
-        .catch(err => console.log(err))
-        .finally(() => this.loading = false);
+        
+        this.loading = true
+        const res = await deleteArticle(row._id)
+        if (res.code === 200) {
+          ElMessage({
+            type: 'success',
+            message: res.msg,
+          })
+          await this.getArticles()
+        }
+      } catch (err) {
+        if (err !== 'cancel') {
+          console.error(err)
+        }
+      } finally {
+        this.loading = false
+      }
     },
     submit() {
       if (this.isNew) {
@@ -129,38 +140,6 @@ export default {
       this.newData = { ...article };
       this.isNew = false;
     },
-    del(row) {
-      ElMessageBox.confirm(
-        `确定要删除文章《${row.title}》?`,
-        'Warning',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-        }
-      )
-        .then(() => {
-          this.loading = true
-
-          fetch(`/api/articles/${row._id}`, {
-            method: 'DELETE'
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.code === 200) {
-                ElMessage({
-                  type: 'success',
-                  message: data.msg,
-                })
-                this.getArticles();
-              }
-            })
-            .catch(err => console.log(err));
-        })
-        .catch(() => {
-        })
-        .finally(() => this.loading = false);
-    }
   }
 }
 </script>

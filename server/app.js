@@ -14,6 +14,13 @@ mongoose.connection.once('open', ()=>{
   console.log('connected to db');
 });
 
+// 使用 cors 包
+const cors = require('cors');
+app.use(cors({
+  origin: ['https://node-demo-client.vercel.app', 'http://localhost:8080'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // routes
 app.use(router);
