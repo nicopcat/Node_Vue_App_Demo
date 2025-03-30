@@ -1,7 +1,9 @@
-// @ts-ignore
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
+
+// 获取当前目录名
+const __dirname = dirname(new URL(import.meta.url).pathname);
 
 // https://vite.dev/config/
 export default defineConfig({
