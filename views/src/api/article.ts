@@ -7,7 +7,7 @@ export function getArticles() {
   })
 }
 
-export function createArticle(data) {
+export function createArticle(data: ArticleDTO) {
   return request({
     url: '/articles/add',
     method: 'post',
@@ -15,7 +15,7 @@ export function createArticle(data) {
   })
 }
 
-export function updateArticle(id, data) {
+export function updateArticle(id: string, data: ArticleDTO) {
   return request({
     url: `/articles/${id}`,
     method: 'put',
@@ -23,7 +23,7 @@ export function updateArticle(id, data) {
   })
 }
 
-export function deleteArticle(id) {
+export function deleteArticle(id: string) {
   return request({
     url: `/articles/${id}`,
     method: 'delete'

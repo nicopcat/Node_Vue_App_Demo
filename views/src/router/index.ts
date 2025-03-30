@@ -1,8 +1,9 @@
+// @ts-ignore
 import { createMemoryHistory, createRouter } from 'vue-router'
-
 import HomeView from '../components/HomeView.vue'
 import TodoView from '../components/TodoView.vue'
 import ArticleView from '../components/ArticleView.vue'
+
 const routes = [
   { path: '/', component: HomeView },
   { path: '/todos', component: TodoView },
