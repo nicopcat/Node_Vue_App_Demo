@@ -9,7 +9,7 @@ export function getArticles() {
 
 export function createArticle(data) {
   return request({
-    url: '/articles',
+    url: '/articles/add',
     method: 'post',
     data
   })
@@ -28,4 +28,4 @@ export function deleteArticle(id) {
     url: `/articles/${id}`,
     method: 'delete'
   })
-} 
+}

@@ -1,7 +1,10 @@
 <template>
   <div class="my-articles">
     <div class="form-container">
-      <el-form>
+    <div v-if="!isNew && !isEdit">
+      <el-button type="primary" @click="handleNew">添加</el-button>
+    </div>
+      <el-form v-if="isNew || isEdit">
         <el-form-item label="题目">
           <el-input v-model="newData.title" />
         </el-form-item>
@@ -26,7 +29,7 @@
       <el-table-column fixed="right" label="操作" width="120">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="edit(scope.row._id)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="del(scope.row)">删除</el-button>
+          <!-- <el-button link type="primary" size="small" @click="del(scope.row)">删除</el-button> -->
         </template>
       </el-table-column>
     </el-table>
@@ -52,7 +55,6 @@ const newData = reactive({
   content: ''
 })
 const loading = ref(false)
-const isNew = ref(true)
 
 // 方法定义
 const fetchArticles = async () => {
@@ -140,11 +142,19 @@ const submit = () => {
   }
 }
 
+const isEdit = ref(false)
+const isNew = ref(false)
 const edit = (id) => {
+  isEdit.value = true
   const foundArticle = articles.value.find(a => a._id === id)
   Object.assign(article, foundArticle)
   Object.assign(newData, foundArticle)
   isNew.value = false
+}
+
+const handleNew = () => {
+  isNew.value = true
+  isEdit.value = false
 }
 
 // 组件挂载时获取文章列表
@@ -153,7 +163,9 @@ fetchArticles()
 
 <style>
 .my-articles {
-  max-width: 700px;
+  width: 100%;
+  min-width: 500px;
+  max-width: 80%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

@@ -1,26 +1,45 @@
 <script setup lang="ts">
-import MyArticles from './components/MyArticles.vue'
+
 </script>
 
 <template>
   <div class="main">
-    <img alt="Vue logo" src="./assets/capybara_janew.jpg" width="250" />
-    <MyArticles msg="Welcome to Your Vue.js App" />
+    <nav class="navbar">
+      <RouterLink to="/" class="nav-item">首页</RouterLink>
+      <RouterLink to="/article" class="nav-item">日记</RouterLink>
+      <RouterLink to="/todos" class="nav-item">待办</RouterLink>
+    </nav>
+    <RouterView />
   </div>
 </template>
 
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.nav-item {
+  margin-right: 2rem;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.nav-item:hover {
+  color: #42b883;
+}
+.main {
+  padding-top: 70px;
 }
 </style>

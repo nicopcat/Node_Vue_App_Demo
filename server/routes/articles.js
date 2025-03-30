@@ -14,17 +14,8 @@ router.get('/', (req, res) => {
 });
 
 
-router.get('/articles', (req, res) => {
-  Article.find().sort({ createdAt: -1 }).then((articles) => {
-    // 处理查询到的文章数据
-    res.json({ articles});
-  }).catch((err) => {
-    console.log(err);
-  });
-});
-
 // 获取单篇文章
-router.get('/articles/:id', (req, res) => {
+router.get('/:id', (req, res) => {
   Article.findById(req.params.id).then(article => {
     res.json({ article });
    }).catch((err) => {
@@ -33,7 +24,7 @@ router.get('/articles/:id', (req, res) => {
 });
 
 // 新增文章
-router.post('/articles', (req, res) => {
+router.post('/add', (req, res) => {
   console.log(req.body);
   const article = new Article(req.body);
   article.save()
@@ -42,7 +33,7 @@ router.post('/articles', (req, res) => {
 });
 
 // 更新文章
-router.put('/articles/:id', (req, res) => {
+router.put('/:id', (req, res) => {
   Article.findByIdAndUpdate(req.params.id, req.body, { new: true }).then(article => {
     res.json({ article });
   }).catch(err => {
@@ -52,7 +43,7 @@ router.put('/articles/:id', (req, res) => {
 });
 
 // 删除文章
-router.delete('/articles/:id', (req, res) => {
+router.delete('/:id', (req, res) => {
   Article.findByIdAndDelete(req.params.id ).then(r => {
     res.json({code:200, msg: '删除成功'});
    }).catch((err) => {
