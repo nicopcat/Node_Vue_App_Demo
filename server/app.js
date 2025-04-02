@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config()
 const articlesRouter = require('./routes/articles');
 const todosRouter = require('./routes/todos');
+const usersRouter = require('./routes/users');
 const path = require('path');
 
 
@@ -27,6 +28,7 @@ app.use(cors({
 // routes
 app.use('/articles', articlesRouter);
 app.use('/todos', todosRouter);
+app.use('/api/user', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/*', (req, res) => {

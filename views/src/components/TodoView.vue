@@ -1,22 +1,45 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getTodos, createTodo, updateTodo, deleteTodo } from '@/api/todo'
 import { ElMessage } from 'element-plus'
 
 const todos = ref([])
-
-
+const activeTab = ref('active')
 const isEdit = ref(false)
+const editingId = ref('')
+const isSubmitting = ref(false)
+const isLoading = ref(false)
+const isSaving = ref(false)
 const editTodo = ref({
   task: '',
   importance: 0,
   completed: false
 })
 
+// 计算属性：根据标签页筛选待办事项
+const filteredTodos = computed(() => {
+  console.log('Current todos:', todos.value);
+  console.log('Active tab:', activeTab.value);
+  const filtered = todos.value.filter(todo => {
+    if (activeTab.value === 'active') {
+      return !todo.completed;
+    } else {
+      return todo.completed;
+    }
+  });
+  console.log('Filtered todos:', filtered);
+  return filtered;
+})
 
 const fetchTodos = async () => {
-  const res = await getTodos()
-  todos.value = res.todos || []
+  isLoading.value = true
+  try {
+    const res = await getTodos();
+    console.log('Fetched todos:', res);
+    todos.value = res.todos || [];
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const openEditDialog = async () => {
@@ -25,24 +48,56 @@ const openEditDialog = async () => {
 }
 
 const addTodo = async (task: string) => {
-  console.log('editTodo', editTodo.value);
-
-  if (editTodo.value.task) {
-    // 更新 
-    await updateTodo(editTodo.value._id, { task: editTodo.value.task })
-    ElMessage.success('更新成功')
-  } else {
-    // 新增
-    await createTodo({ task })
-    ElMessage.success('新增成功')
+  if (isSubmitting.value) return
+  
+  isSubmitting.value = true
+  try {
+    console.log('addTodo', editTodo.value);
+    
+    if (editTodo.value._id) {
+      await updateTodo(editTodo.value._id, { task })
+      ElMessage.success('更新成功')
+    } else {
+      await createTodo(editTodo.value)
+      ElMessage.success('新增成功')
+    }
+    isEdit.value = false
+    fetchTodos()
+  } finally {
+    isSubmitting.value = false
   }
-  isEdit.value = false
-  fetchTodos()
 }
 
 const handleEditTodo = async (id: string, todo: any) => {
-  isEdit.value = true
-  editTodo.value = todo
+  editingId.value = id
+  editTodo.value = { ...todo }
+}
+
+const handleSaveEdit = async () => {
+  if (isSaving.value) return
+  
+  if (editTodo.value.task.trim()) {
+    isSaving.value = true
+    try {
+      await updateTodo(editingId.value, { task: editTodo.value.task })
+      ElMessage.success('更新成功')
+      editingId.value = ''
+      fetchTodos()
+    } finally {
+      isSaving.value = false
+    }
+  } else {
+    ElMessage.warning('任务内容不能为空')
+  }
+}
+
+const handleCancelEdit = () => {
+  editingId.value = ''
+  editTodo.value = {
+    task: '',
+    importance: 0,
+    completed: false
+  }
 }
 
 const handleDeleteTodo = async (id: string) => {
@@ -56,14 +111,6 @@ const handleCompleted = async (id: string, completed: boolean) => {
   ElMessage.success('更新成功')
   fetchTodos()
 }
-const handleEditTask = async (id: string, task: string) => {
-  await updateTodo(id, { task })
-  ElMessage.success('更新成功')
-  isInlineEdit.value = false
-  fetchTodos()
-}
-
-const isInlineEdit = ref(false)
 
 onMounted(() => {
   fetchTodos()
@@ -71,58 +118,213 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <h1>代办列表</h1>
-    <el-button type="primary" @click="openEditDialog">添加</el-button>
-    <el-table :data="todos">
-      <el-table-column prop="task" label="任务" width="350" show-overflow-tooltip>
-        <template #default="scope">
-          <span style="width: 100%;" v-if="!isInlineEdit"
-            @click="isInlineEdit = true" @blur="isInlineEdit = false">{{
-              scope.row.task }}</span>
-          <div v-else
-            style="display: flex; flex-flow: row nowrap; align-items: center;">
-            <el-input v-model="scope.row.task" />
-            <el-button style="margin: 10px;" v-if="isInlineEdit" size="small"
-              type="primary"
-              @click="handleEditTask(scope.row._id, scope.row.task)">save</el-button>
+  <div class="todo-container">
+    <h1>待办事项</h1>
+    
+    <!-- 添加按钮 -->
+    <div class="header">
+      <el-button type="primary" @click="openEditDialog">添加待办</el-button>
+    </div>
+
+    <!-- 标签页 -->
+    <el-tabs v-model="activeTab" class="todo-tabs">
+      <el-tab-pane label="进行中" name="active">
+        <div class="todo-list">
+          <el-skeleton :rows="3" animated v-if="isLoading" />
+          <div v-else-if="filteredTodos.length === 0" class="empty-state">
+            暂无进行中的任务
           </div>
+          <div v-else v-for="todo in filteredTodos" :key="todo._id" class="todo-item">
+            <el-checkbox 
+              v-model="todo.completed" 
+              @change="handleCompleted(todo._id, todo.completed)"
+            />
+            <div class="todo-content">
+              <template v-if="editingId === todo._id">
+                <el-input 
+                  v-model="editTodo.task" 
+                  placeholder="请输入任务内容"
+                  @keyup.enter="handleSaveEdit"
+                />
+              </template>
+              <template v-else>
+                <span class="todo-text" @click="handleEditTodo(todo._id, todo)">{{ todo.task }}</span>
+              </template>
+            </div>
+            <div class="todo-actions">
+              <template v-if="editingId === todo._id">
+                <el-button 
+                  link 
+                  type="primary" 
+                  @click.stop="handleSaveEdit"
+                  :loading="isSaving"
+                  :disabled="isSaving"
+                >保存</el-button>
+                <el-button 
+                  link 
+                  @click="handleCancelEdit"
+                  :disabled="isSaving"
+                >取消</el-button>
+              </template>
+              <template v-else>
+                <el-button link type="primary" @click.stop="handleEditTodo(todo._id, todo)">编辑</el-button>
+                <el-button link type="danger" @click="handleDeleteTodo(todo._id)">删除</el-button>
+              </template>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
+      
+      <el-tab-pane label="已完成" name="completed">
+        <div class="todo-list">
+          <el-skeleton :rows="3" animated v-if="isLoading" />
+          <div v-else-if="filteredTodos.length === 0" class="empty-state">
+            暂无已完成的任务
+          </div>
+          <div v-else v-for="todo in filteredTodos" :key="todo._id" class="todo-item">
+            <el-checkbox 
+              v-model="todo.completed" 
+              @change="handleCompleted(todo._id, todo.completed)"
+            />
+            <div class="todo-content">
+              <template v-if="editingId === todo._id">
+                <el-input 
+                  v-model="editTodo.task" 
+                  placeholder="请输入任务内容"
+                  @keyup.enter="handleSaveEdit"
+                  @blur="handleCancelEdit"
+                />
+              </template>
+              <template v-else>
+                <span class="todo-text completed" @click="handleEditTodo(todo._id, todo)">{{ todo.task }}</span>
+              </template>
+            </div>
+            <div class="todo-actions">
+              <template v-if="editingId === todo._id">
+                <el-button 
+                  link 
+                  type="primary" 
+                  @click.stop="handleSaveEdit"
+                  :loading="isSaving"
+                  :disabled="isSaving"
+                >保存</el-button>
+                <el-button 
+                  link 
+                  @click="handleCancelEdit"
+                  :disabled="isSaving"
+                >取消</el-button>
+              </template>
+              <template v-else>
+                <el-button link type="primary" @click="handleEditTodo(todo._id, todo)">编辑</el-button>
+                <el-button link type="danger" @click="handleDeleteTodo(todo._id)">删除</el-button>
+              </template>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
 
-        </template>
-      </el-table-column>
-      <el-table-column prop="completed" label="完成">
-        <template #default="scope">
-          <el-switch v-model="scope.row.completed"
-            @change="handleCompleted(scope.row._id, scope.row.completed)" />
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" />
-      <el-table-column prop="updatedAt" label="更新时间" />
-      <el-table-column fixed="right" label="Operations" min-width="120">
-        <template #default="scope">
-          <el-button link type="primary" size="small"
-            @click="handleEditTodo(scope.row._id, scope.row)">
-            编辑
-          </el-button>
-          <el-button link type="primary" size="small"
-            @click="handleDeleteTodo(scope.row._id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <el-dialog title="编辑任务" v-model="isEdit" :width="400" :height="400">
-      <el-form :model="editTodo" label-width="120px">
+    <!-- 编辑对话框 -->
+    <el-dialog 
+      :title="editTodo._id ? '编辑任务' : '新增任务'" 
+      v-model="isEdit" 
+      width="400px"
+    >
+      <el-form :model="editTodo" label-width="80px">
         <el-form-item label="任务">
-          <el-input v-model="editTodo.task" />
+          <el-input v-model="editTodo.task" placeholder="请输入任务内容" />
         </el-form-item>
-
       </el-form>
       <template #footer>
-        <el-button type="primary" @click="addTodo(editTodo.task)">确定</el-button>
-        <el-button type="primary" @click="isEdit = false">取消</el-button>
+        <span class="dialog-footer">
+          <el-button @click="isEdit = false" :disabled="isSubmitting">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="addTodo(editTodo.task)"
+            :loading="isSubmitting"
+            :disabled="isSubmitting"
+          >确定</el-button>
+        </span>
       </template>
     </el-dialog>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.todo-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+  h1{
+    color: #333;
+    font-size: 32px;
+  }
+}
+
+.header {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.todo-tabs {
+  margin-top: 20px;
+}
+
+.todo-list {
+  /* margin-top: 20px; */
+}
+
+.todo-item {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  gap: 10px;
+}
+
+.todo-content {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.todo-text {
+  color: #333;
+  text-align: start;
+  cursor: pointer;
+  display: block;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.todo-text:hover {
+  background-color: #f5f7fa;
+}
+
+.todo-text.completed {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+}
+
+:deep(.el-input) {
+  width: 100%;
+}
+</style>
