@@ -25,7 +25,8 @@
     <el-dialog 
       title="编辑日记" 
       v-model="dialogVisible" 
-      width="60%"
+      width="90%"
+      style="max-width: 600px;"
     >
       <el-form :model="editData" label-width="80px">
         <el-form-item label="标题">

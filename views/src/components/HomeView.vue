@@ -7,7 +7,7 @@
 
 <style scoped>
   .home{
-    margin-top: 100px;
+    margin-top:20%;
     h1 {
     text-align: center;
     color: #333;

@@ -5,35 +5,29 @@
       <el-button type="primary" @click="handleNew">写日记</el-button>
     </div>
     
-    <!-- 日记列表 -->
     <div class="diary-list" v-loading="loading">
       <el-empty v-if="articles.length === 0" description="暂无日记" />
-      <el-row :gutter="20" v-else>
-        <el-col :span="8" v-for="article in articles" :key="article._id">
-          <el-card class="diary-card" shadow="hover" @click="viewDetail(article._id)">
-            <template #header>
-              <div class="card-header">
-                <h3>{{ article.title }}</h3>
-                <span class="date">{{ formatDate(article.createdAt) }}</span>
-              </div>
-            </template>
-            <div class="card-content">
-              <p class="summary">{{ getSummary(article.content) }}</p>
-            </div>
-            <div class="card-footer">
-              <el-button link type="primary" @click.stop="edit(article._id)">编辑</el-button>
-              <el-button link type="danger" @click.stop="del(article)">删除</el-button>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
+      <ul v-else>
+        <li v-for="article in articles" :key="article._id" class="diary-item" @click="viewDetail(article._id)">
+          <div class="item-header">
+            <h3>{{ article.title }}</h3>
+            <span class="date">{{ formatDate(article.createdAt) }}</span>
+          </div>
+          <p class="summary">{{ getSummary(article.content) }}</p>
+          <div class="item-footer">
+            <el-button link type="primary" @click.stop="edit(article._id)">编辑</el-button>
+            <el-button link type="danger" @click.stop="del(article)">删除</el-button>
+          </div>
+        </li>
+      </ul>
     </div>
 
     <!-- 编辑/新增对话框 -->
     <el-dialog 
       :title="isNew ? '写日记' : '编辑日记'" 
       v-model="dialogVisible" 
-      width="60%"
+      width="90%"
+      style="max-width: 600px;"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
     >
@@ -244,59 +238,80 @@ onMounted(() => {
 
 .header h1 {
   margin: 0;
-  font-size: 28px;
-  color: #333;
+  font-size: 24px;
 }
 
 .diary-list {
   margin-top: 20px;
 }
 
-.diary-card {
-  margin-bottom: 20px;
+.diary-item {
+  background: #ffffff;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 10px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background 0.3s;
 }
 
-.diary-card:hover {
-  transform: translateY(-5px);
+.diary-item:hover {
+  background: #f5f5f5;
 }
 
-.card-header {
+.item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f0f4ff;
-  padding: 10px;
-  border-radius: 4px 4px 0 0;
-}
-
-.card-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.date {
-  font-size: 14px;
   color: #666;
 }
 
-.card-content {
-  min-height: 100px;
+.item-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.date {
+  font-size: 12px;
+  color: #999;
 }
 
 .summary {
   color: #666;
   line-height: 1.6;
-  margin: 0;
+  margin: 10px 0;
+  text-align: start;
 }
 
-.card-footer {
+.item-footer {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .diary-container {
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .diary-item {
+    padding: 10px;
+  }
+
+  .item-header h3 {
+    font-size: 14px;
+  }
+
+  .date {
+    font-size: 10px;
+  }
+}
+
+ul{
+  padding: 0;
 }
 </style>

@@ -126,7 +126,6 @@ onMounted(() => {
 
 <template>
   <div class="todo-container">
-    <h1>待办事项</h1>
     
     <!-- 添加按钮 -->
     <div class="header">
@@ -261,10 +260,7 @@ onMounted(() => {
   max-width: 700px;
   margin: 0 auto;
   padding: 20px;
-  h1{
-    color: #333;
-    font-size: 32px;
-  }
+ 
 }
 
 .header {
