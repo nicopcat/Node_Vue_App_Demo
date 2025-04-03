@@ -1,15 +1,22 @@
-import request from './config'
+import request from '@/utils/request'
 
 export function getArticles() {
   return request({
-    url: '/articles',
+    url: '/api/articles',
+    method: 'get'
+  })
+}
+
+export function getArticle(id: string) {
+  return request({
+    url: `/api/articles/${id}`,
     method: 'get'
   })
 }
 
 export function createArticle(data: ArticleDTO) {
   return request({
-    url: '/articles/add',
+    url: '/api/articles/add',
     method: 'post',
     data
   })
@@ -17,7 +24,7 @@ export function createArticle(data: ArticleDTO) {
 
 export function updateArticle(id: string, data: ArticleDTO) {
   return request({
-    url: `/articles/${id}`,
+    url: `/api/articles/${id}`,
     method: 'put',
     data
   })
@@ -25,7 +32,7 @@ export function updateArticle(id: string, data: ArticleDTO) {
 
 export function deleteArticle(id: string) {
   return request({
-    url: `/articles/${id}`,
+    url: `/api/articles/${id}`,
     method: 'delete'
   })
 }

@@ -1,25 +1,25 @@
-import request from './config'
+import request from '@/utils/request'
 
-export interface LoginParams {
+// 用户登录
+export function login(data: {
   username: string
   password: string
-}
-
-export interface RegisterParams extends LoginParams {
-  confirmPassword: string
-}
-
-export const login = (data: LoginParams) => {
+}) {
   return request({
-    url: '/api/user/login',
+    url: '/api/users/login',
     method: 'post',
     data
   })
 }
 
-export const register = (data: RegisterParams) => {
+// 用户注册
+export function register(data: {
+  username: string
+  password: string
+  confirmPassword: string
+}) {
   return request({
-    url: '/api/user/register',
+    url: '/api/users/register',
     method: 'post',
     data
   })

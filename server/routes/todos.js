@@ -1,68 +1,70 @@
 // 我们将在该文件中定义文章相关的路由处理逻辑
 const express = require('express');
 const router = express.Router();
-const Todos = require('../models/todo');
+const Todo = require('../models/todo');
+const { verifyToken } = require('../middleware/auth');
+const { success, error } = require('../utils/response');
 
-// 获取代办列表
+// 获取当前用户的所有 todos
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const todos = await Todo.find({ userId: req.userId });
+    res.json(success(todos, '获取待办事项成功'));
+  } catch (err) {
+    res.status(500).json(error('获取待办事项失败'));
+  }
+});
 
-router.get('/', (req, res) => {
-  Todos.find().sort({ createdAt: -1 }).then((todos) => {
-    // 格式化 createdAt
-    const formattedTodos = todos.map(todo => {
-      const createdAt = new Date(todo.createdAt);
-      const formattedDate = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
-      const updatedAt = new Date(todo.updatedAt);
-      const formattedUpdatedAt = `${updatedAt.getFullYear()}-${String(updatedAt.getMonth() + 1).padStart(2, '0')}-${String(updatedAt.getDate()).padStart(2, '0')}`; 
-      return {
-        ...todo.toObject(), // 转换为普通对象
-        createdAt: formattedDate, // 替换为格式化后的日期
-        updatedAt: formattedUpdatedAt // 替换为格式化后的日期
-      };
+// 创建新的 todo
+router.post('/add', verifyToken, async (req, res) => {
+  const todo = new Todo({
+    task: req.body.task,
+    importance: req.body.importance,
+    completed: req.body.completed,
+    userId: req.userId // 从 token 中获取用户 ID
+  });
+
+  try {
+    const newTodo = await todo.save();
+    res.status(201).json(success(newTodo, '创建待办事项成功'));
+  } catch (err) {
+    res.status(400).json(error('创建待办事项失败'));
+  }
+});
+
+// 更新 todo
+router.put('/:id', verifyToken, async (req, res) => {
+  try {
+    const todo = await Todo.findOne({ _id: req.params.id, userId: req.userId });
+    if (!todo) {
+      return res.status(404).json(error('待办事项不存在', 404));
+    }
+
+    if (req.body.task) todo.task = req.body.task;
+    if (req.body.importance !== undefined) todo.importance = req.body.importance;
+    if (req.body.completed !== undefined) todo.completed = req.body.completed;
+
+    const updatedTodo = await todo.save();
+    res.json(success(updatedTodo, '更新待办事项成功'));
+  } catch (err) {
+    res.status(400).json(error('更新待办事项失败'));
+  }
+});
+
+// 删除 todo
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const todo = await Todo.findOneAndDelete({ 
+      _id: req.params.id, 
+      userId: req.userId 
     });
-
-    res.json({ todos: formattedTodos });
-  }).catch((err) => {
-    console.log(err);
-  });
-});
-
-
-// 获取单个代办
-router.get('/:id', (req, res) => {
-  Todos.findById(req.params.id).then(todo => {
-    res.json({ todo });
-   }).catch((err) => {
-    console.log(err);
-  })
-});
-
-// 新增代办
-router.post('/add', (req, res) => {
-  console.log(req.body);
-  const todo = new Todos(req.body);
-  todo.save()
-      .then(() => res.json({ code:200, msg: '新增成功' }))
-      .catch(err => console.log(err));
-});
-
-// 更新代办
-router.put('/:id', (req, res) => {
-  console.log('updateTodo',req.body);
-  Todos.findByIdAndUpdate(req.params.id, req.body, { new: true }).then(todo => {
-    res.json({ todo });
-  }).catch(err => {
-    console.log(err);
-    res.status(500).json({ error: 'An error occurred while updating the todo.' });
-  });
-});
-
-// 删除代办
-router.delete('/:id', (req, res) => {
-  Todos.findByIdAndDelete(req.params.id ).then(r => {
-    res.json({code:200, msg: '删除成功'});
-   }).catch((err) => {
-    console.log(err);
-  })
+    if (!todo) {
+      return res.status(404).json(error('待办事项不存在', 404));
+    }
+    res.json(success(null, '删除待办事项成功'));
+  } catch (err) {
+    res.status(500).json(error('删除待办事项失败'));
+  }
 });
 
 module.exports = router;

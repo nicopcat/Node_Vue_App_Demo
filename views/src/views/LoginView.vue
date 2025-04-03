@@ -24,9 +24,9 @@ const handleLogin = async () => {
 
   isSubmitting.value = true
   try {
-    const res = await login(loginForm.value)
-    userStore.setToken(res.token)
-    userStore.setUserInfo(res.user)
+    const {token, user} = await login(loginForm.value)
+    userStore.setToken(token)
+    userStore.setUserInfo(user)
     ElMessage.success('登录成功')
     
     // 如果有重定向地址，则跳转到重定向地址

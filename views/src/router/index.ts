@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../components/HomeView.vue'
 import TodoView from '@/components/TodoView.vue'
 import ArticleView from '../components/ArticleView.vue'
+import DiaryDetail from '@/components/DiaryDetail.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import { useUserStore } from '@/stores/user'
@@ -12,9 +13,27 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'todo',
-      component: TodoView,
+      name: 'home',
+      component: HomeView,
       meta: { requiresAuth: true }  // 确保设置了 requiresAuth
+    },
+    {
+      path: '/article',
+      name: 'article',
+      component: ArticleView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/diary/:id',
+      name: 'diary-detail',
+      component: DiaryDetail,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/todos',
+      name: 'todos',
+      component: TodoView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',

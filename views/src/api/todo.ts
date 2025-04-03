@@ -1,31 +1,44 @@
-import request from './config'
+import request from '@/utils/request'
 
-export function getTodos() {
-  return request({
-    url: '/todos',
-    method: 'get'
-  })
+// 定义接口类型
+export interface Todo {
+  _id: string
+  task: string
+  importance?: number
+  completed: boolean
+  userId: string
+  createdAt: string
+  updatedAt: string
 }
 
-export function createTodo(data: TodoDTO) {
-  return request({
-    url: '/todos/add',
-    method: 'post',
-    data
-  })
+export interface CreateTodoData {
+  task: string
+  importance?: number
+  completed?: boolean
 }
 
-export function updateTodo(id: string, data: TodoDTO) {
-  return request({
-    url: `/todos/${id}`,
-    method: 'put',
-    data
-  })
+export interface UpdateTodoData {
+  task?: string
+  importance?: number
+  completed?: boolean
 }
 
-export function deleteTodo(id: string) {
-  return request({
-    url: `/todos/${id}`,
-    method: 'delete'
-  })
+// 获取所有 todos
+export const getTodos = () => {
+  return request.get<Todo[]>('/api/todos')
+}
+
+// 创建新的 todo
+export const createTodo = (data: CreateTodoData) => {
+  return request.post<Todo>('/api/todos/add', data)
+}
+
+// 更新 todo
+export const updateTodo = (id: string, data: UpdateTodoData) => {
+  return request.put<Todo>(`/api/todos/${id}`, data)
+}
+
+// 删除 todo
+export const deleteTodo = (id: string) => {
+  return request.delete(`/api/todos/${id}`)
 }

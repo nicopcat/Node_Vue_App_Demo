@@ -26,9 +26,9 @@ app.use(cors({
 }));
 
 // routes
-app.use('/articles', articlesRouter);
-app.use('/todos', todosRouter);
-app.use('/api/user', usersRouter);
+app.use('/api/articles', articlesRouter);
+app.use('/api/todos', todosRouter);
+app.use('/api/users', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/*', (req, res) => {

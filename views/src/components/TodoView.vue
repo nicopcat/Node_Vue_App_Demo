@@ -18,8 +18,6 @@ const editTodo = ref({
 
 // 计算属性：根据标签页筛选待办事项
 const filteredTodos = computed(() => {
-  console.log('Current todos:', todos.value);
-  console.log('Active tab:', activeTab.value);
   const filtered = todos.value.filter(todo => {
     if (activeTab.value === 'active') {
       return !todo.completed;
@@ -27,7 +25,6 @@ const filteredTodos = computed(() => {
       return todo.completed;
     }
   });
-  console.log('Filtered todos:', filtered);
   return filtered;
 })
 
@@ -36,7 +33,7 @@ const fetchTodos = async () => {
   try {
     const res = await getTodos();
     console.log('Fetched todos:', res);
-    todos.value = res.todos || [];
+    todos.value = res || [];
   } finally {
     isLoading.value = false
   }
@@ -79,7 +76,10 @@ const handleSaveEdit = async () => {
   if (editTodo.value.task.trim()) {
     isSaving.value = true
     try {
-      await updateTodo(editingId.value, { task: editTodo.value.task })
+      await updateTodo(editingId.value, { 
+        task: editTodo.value.task,
+        completed: editTodo.value.completed
+      })
       ElMessage.success('更新成功')
       editingId.value = ''
       fetchTodos()
@@ -107,9 +107,16 @@ const handleDeleteTodo = async (id: string) => {
 }
 
 const handleCompleted = async (id: string, completed: boolean) => {
-  await updateTodo(id, { completed })
-  ElMessage.success('更新成功')
-  fetchTodos()
+  console.log('handleCompleted 被调用:', { id, completed });
+  
+  try {
+    await updateTodo(id, { completed })
+    ElMessage.success('更新成功')
+    await fetchTodos()
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    ElMessage.error('更新状态失败')
+  }
 }
 
 onMounted(() => {
@@ -136,8 +143,8 @@ onMounted(() => {
           </div>
           <div v-else v-for="todo in filteredTodos" :key="todo._id" class="todo-item">
             <el-checkbox 
-              v-model="todo.completed" 
-              @change="handleCompleted(todo._id, todo.completed)"
+              :model-value="todo.completed"
+              @update:model-value="(val) => handleCompleted(todo._id, val)"
             />
             <div class="todo-content">
               <template v-if="editingId === todo._id">
@@ -183,8 +190,8 @@ onMounted(() => {
           </div>
           <div v-else v-for="todo in filteredTodos" :key="todo._id" class="todo-item">
             <el-checkbox 
-              v-model="todo.completed" 
-              @change="handleCompleted(todo._id, todo.completed)"
+              :model-value="todo.completed"
+              @update:model-value="(val) => handleCompleted(todo._id, val)"
             />
             <div class="todo-content">
               <template v-if="editingId === todo._id">
@@ -192,7 +199,6 @@ onMounted(() => {
                   v-model="editTodo.task" 
                   placeholder="请输入任务内容"
                   @keyup.enter="handleSaveEdit"
-                  @blur="handleCancelEdit"
                 />
               </template>
               <template v-else>
@@ -215,7 +221,7 @@ onMounted(() => {
                 >取消</el-button>
               </template>
               <template v-else>
-                <el-button link type="primary" @click="handleEditTodo(todo._id, todo)">编辑</el-button>
+                <el-button link type="primary" @click.stop="handleEditTodo(todo._id, todo)">编辑</el-button>
                 <el-button link type="danger" @click="handleDeleteTodo(todo._id)">删除</el-button>
               </template>
             </div>
