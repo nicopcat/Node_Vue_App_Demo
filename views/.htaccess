@@ -1,0 +1,9 @@
+# 开启rewrite功能
+RewriteEngine On
+
+# 如果请求的不是真实存在的文件或目录
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# 将所有请求重定向到index.html
+RewriteRule ^(.*)$ index.html [L] 
