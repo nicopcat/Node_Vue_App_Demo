@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { login } from '@/api/user'
 import { ElMessage } from 'element-plus'
@@ -12,6 +12,11 @@ const isSubmitting = ref(false)
 const loginForm = ref({
   username: '',
   password: ''
+})
+
+// 检测是否为移动端
+const isMobile = computed(() => {
+  return window.innerWidth <= 480; // 根据屏幕宽度判断
 })
 
 const handleLogin = async () => {
@@ -42,9 +47,9 @@ const handleLogin = async () => {
 
 <template>
   <div class="login-container">
-    <div class="login-box">
+    <div class="login-box" :class="{ 'mobile': isMobile }">
       <h2>登录</h2>
-      <el-form :model="loginForm" label-width="80px">
+      <el-form :model="loginForm" :label-width="isMobile ? '60px' : '80px'">
         <el-form-item label="用户名">
           <el-input v-model="loginForm.username" placeholder="请输入用户名" />
         </el-form-item>
@@ -62,8 +67,9 @@ const handleLogin = async () => {
             @click="handleLogin"
             :loading="isSubmitting"
             :disabled="isSubmitting"
+            class="login-button"
           >登录</el-button>
-          <el-button @click="router.push('/register')">注册账号</el-button>
+          <el-button @click="router.push('/register')" class="register-button">注册账号</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -77,11 +83,12 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #a8c8e0, #4072bc1d);
+  padding: 0 15px;
 }
 
 .login-box {
   width: 400px;
-  padding: 60px;
+  padding: 40px;
   background: linear-gradient(white, #f9f9f9);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -94,8 +101,39 @@ const handleLogin = async () => {
   }
 }
 
+/* 移动端适配样式 */
+.login-box.mobile {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 20px;
+  min-height: auto;
+}
+
 :deep(.el-form-item:last-child) {
   margin-bottom: 0;
   text-align: center;
+}
+
+/* 移动端按钮样式 */
+@media (max-width: 480px) {
+  .login-box {
+    width: 100%;
+    max-width: 320px;
+    padding: 10px;
+    min-height: auto;
+  }
+  .login-button, .register-button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  :deep(.el-form-item__content) {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
 }
 </style> 

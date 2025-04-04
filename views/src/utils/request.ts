@@ -12,7 +12,8 @@ interface ApiResponse<T = any> {
 // 创建 axios 实例
 const service = axios.create({
   // baseURL: 'http://localhost:3000',
-  baseURL: 'https://node-demo-server-nine.vercel.app',
+  // baseURL: 'https://node-demo-server-nine.vercel.app',
+  baseURL: 'https://capynotebackend.nekolas.com',
   timeout: 5000
 })
 

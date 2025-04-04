@@ -11,7 +11,7 @@ const isMenuActive = ref(false)
 
 // 检测是否为移动端
 const isMobile = computed(() => {
-  return window.innerWidth <= 768; // 根据屏幕宽度判断
+  return window.innerWidth <= 480; // 根据屏幕宽度判断
 })
 
 const toggleMenu = () => {
@@ -27,7 +27,7 @@ const handleLogout = () => {
 <template>
   <div class="main">
     <nav class="navbar">
-      <div class="navbar-toggle" @click="toggleMenu" v-if="isMobile">
+      <div class="navbar-toggle" @click="toggleMenu" v-if="isMobile && showNavbar">
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
@@ -37,13 +37,16 @@ const handleLogout = () => {
           <router-link to="/" class="navbar-link">豚豚记事本</router-link>
         </h1>
       </div>
-      <div class="navbar-links" v-if="!isMobile" >
+      <div class="navbar-links" v-if="!isMobile && showNavbar">
         <router-link to="/article" class="navbar-link">日记</router-link>
         <router-link to="/todos" class="navbar-link">待办</router-link>
       </div>
-      <el-button class="logout-button" @click="handleLogout">退出</el-button>
+      <div class="navbar-user" v-if="showNavbar">
+        {{ userStore.userInfo.username }}
+        <el-button class="logout-button" @click="handleLogout">退出</el-button>
+      </div>
     </nav>
-    <div class="navbar-menu" :class="{ 'is-active': isMenuActive }">
+    <div class="navbar-menu" :class="{ 'is-active': isMenuActive }" v-if="showNavbar">
       <ul>
         <li><router-link to="/article">日记</router-link></li>
         <li><router-link to="/todos">待办</router-link></li>
@@ -63,7 +66,7 @@ const handleLogout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 10px 2px 10px 20px;
   background-color: #4072bc; /* 导航栏背景颜色 */
   color: white;
 }
@@ -120,6 +123,12 @@ const handleLogout = () => {
 
 .navbar-menu li {
   margin: 5px 0; /* 增加菜单项之间的间距 */
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  color: antiquewhite;
 }
 
 .navbar-menu a {

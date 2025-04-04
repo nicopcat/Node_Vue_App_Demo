@@ -19,7 +19,8 @@ mongoose.connection.once('open', ()=>{
 // 使用 cors 包
 const cors = require('cors');
 app.use(cors({
-  origin: ['https://node-demo-client.vercel.app', 'http://localhost:8080'], //线上
+  origin: ['https://capynote.nekolas.com/', 'http://localhost:8080'], //线上
+  // origin: ['https://node-demo-client.vercel.app', 'http://localhost:8080'], //线上
   // origin: ['http://localhost:5173', 'http://localhost:3000'], //本地
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
