@@ -34,9 +34,8 @@ const handleLogin = async () => {
     userStore.setUserInfo(user)
     ElMessage.success('登录成功')
     
-    // 如果有重定向地址，则跳转到重定向地址
-    const redirect = route.query.redirect as string
-    router.push(redirect || '/')
+    // 登录成功后直接跳转到首页
+    router.push('/')
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')
   } finally {
