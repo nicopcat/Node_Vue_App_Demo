@@ -8,6 +8,9 @@
 <style scoped>
   .home{
     margin-top:20%;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
     h1 {
     text-align: center;
     color: #333;

@@ -13,7 +13,7 @@
             <h3>{{ article.title }}</h3>
             <span class="date">{{ formatDate(article.createdAt) }}</span>
           </div>
-          <p class="summary">{{ getSummary(article.content) }}</p>
+          <p class="summary markdown-body" v-html="getMarkdownSummary(article.content)"></p>
           <div class="item-footer">
             <el-button link type="primary" @click.stop="edit(article._id)">编辑</el-button>
             <el-button link type="danger" @click.stop="del(article)">删除</el-button>
@@ -36,12 +36,27 @@
           <el-input v-model="newData.title" placeholder="请输入日记标题" />
         </el-form-item>
         <el-form-item label="内容">
+          <div class="markdown-tips">
+            支持Markdown语法：**粗体**、*斜体*、# 标题、- 列表、```代码块、> 引用等
+          </div>
           <el-input
             v-model="newData.content"
             type="textarea"
             :rows="10"
             placeholder="记录今天的心情..."
+            show-word-limit
+            maxlength="3000"
           />
+          <div class="preview-toggle">
+            <el-switch
+              v-model="showPreview"
+              active-text="预览"
+              inactive-text="编辑"
+            />
+          </div>
+          <div v-if="showPreview" class="markdown-preview markdown-body">
+            <div v-html="renderedPreview"></div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -57,10 +72,29 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getArticles, createArticle, updateArticle, deleteArticle } from '@/api/article'
+import { marked } from 'marked'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
+import { gfmHeadingId } from 'marked-gfm-heading-id'
+
+// 配置marked
+// 使用插件解决headerIds警告
+marked.use(gfmHeadingId());
+
+marked.setOptions({
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return hljs.highlightAuto(code).value;
+  },
+  breaks: true,  // 自动将换行符转换为<br>标签
+  gfm: true      // 启用GitHub风格的Markdown
+});
 
 const router = useRouter()
 const articles = ref([])
@@ -69,6 +103,7 @@ const submitting = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const isNew = ref(false)
+const showPreview = ref(false)
 
 const newData = reactive({
   title: '',
@@ -87,6 +122,19 @@ const getSummary = (content) => {
   if (!content) return ''
   return content.length > 100 ? content.substring(0, 100) + '...' : content
 }
+
+// 获取Markdown格式的摘要
+const getMarkdownSummary = (content) => {
+  if (!content) return ''
+  const summary = content.length > 150 ? content.substring(0, 150) + '...' : content
+  return marked(summary)
+}
+
+// 预览时将编辑内容渲染为Markdown
+const renderedPreview = computed(() => {
+  if (!newData.content) return '';
+  return marked(newData.content);
+})
 
 // 获取日记列表
 const fetchArticles = async () => {
@@ -192,6 +240,7 @@ const edit = (id) => {
   isNew.value = false
   const foundArticle = articles.value.find(a => a._id === id)
   Object.assign(newData, foundArticle)
+  showPreview.value = false
   dialogVisible.value = true
 }
 
@@ -200,6 +249,7 @@ const handleNew = () => {
   isNew.value = true
   isEdit.value = false
   resetForm()
+  showPreview.value = false
   dialogVisible.value = true
 }
 
@@ -277,16 +327,92 @@ onMounted(() => {
 }
 
 .summary {
-  color: #666;
-  line-height: 1.6;
   margin: 10px 0;
-  text-align: start;
+  color: #666;
+  line-height: 1.5;
+  overflow: hidden;
 }
 
 .item-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+}
+
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4),
+.markdown-body :deep(h5),
+.markdown-body :deep(h6) {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.25;
+  font-size: inherit;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.markdown-body :deep(pre) {
+  padding: 8px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f7f7f7;
+  border-radius: 3px;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.markdown-body :deep(code) {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(175, 184, 193, 0.2);
+  border-radius: 3px;
+}
+
+.markdown-body :deep(pre code) {
+  padding: 0;
+  background-color: transparent;
+}
+
+.markdown-body :deep(blockquote) {
+  padding: 0 1em;
+  color: #57606a;
+  border-left: 0.25em solid #d0d7de;
+  margin: 8px 0;
+}
+
+.markdown-tips {
+  color: #909399;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.preview-toggle {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.markdown-preview {
+  margin-top: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #fafafa;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {

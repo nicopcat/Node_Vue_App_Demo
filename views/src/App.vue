@@ -38,8 +38,8 @@ const handleLogout = () => {
         </h1>
       </div>
       <div class="navbar-links" v-if="!isMobile && showNavbar">
-        <router-link to="/article" class="navbar-link">日记</router-link>
-        <router-link to="/todos" class="navbar-link">待办</router-link>
+        <router-link to="/article" class="navbar-link" active-class="navbar-link-active">日记</router-link>
+        <router-link to="/todos" class="navbar-link" active-class="navbar-link-active">待办</router-link>
       </div>
       <div class="navbar-user" v-if="showNavbar">
         {{ userStore.userInfo.username }}
@@ -48,15 +48,19 @@ const handleLogout = () => {
     </nav>
     <div class="navbar-menu" :class="{ 'is-active': isMenuActive }" v-if="showNavbar">
       <ul>
-        <li><router-link to="/article">日记</router-link></li>
-        <li><router-link to="/todos">待办</router-link></li>
+        <li><router-link to="/article" active-class="navbar-link-active">日记</router-link></li>
+        <li><router-link to="/todos" active-class="navbar-link-active">待办</router-link></li>
       </ul>
     </div>
     <RouterView />
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="less">
+@navcolor: #4072bc;
+@white: white;
+@activecolor: #3259a1;
+
 .main {
   min-height: 100vh;
   overflow: hidden;
@@ -67,88 +71,110 @@ const handleLogout = () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 2px 10px 20px;
-  background-color: #4072bc; /* 导航栏背景颜色 */
-  color: white;
-}
+  background-color: @navcolor;
+  color: @white;
 
-.navbar-toggle {
-  display: flex; /* 显示汉堡菜单 */
-  flex-direction: column;
-  cursor: pointer;
-}
+  &-toggle {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
 
-.bar {
-  height: 3px;
-  width: 25px;
-  background-color: white;
-  margin: 3px 0;
-}
+    @media (min-width: 769px) {
+      display: none;
+    }
 
-.navbar-brand h1 {
-  margin: 0;
-  font-size: 24px;
-}
+    .bar {
+      height: 3px;
+      width: 25px;
+      background-color: @white;
+      margin: 3px 0;
+    }
+  }
 
-.navbar-links {
-  display: flex; /* 水平排列菜单项 */
-}
+  &-brand {
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+  }
 
-.navbar-link {
-  color: white;
-  text-decoration: none;
-  margin-right: 20px; /* 菜单项之间的间距 */
-}
+  &-links {
+    display: flex;
+  }
 
-.navbar-menu {
-  display: none; /* 默认隐藏菜单 */
-  position: absolute; /* 绝对定位 */
-  top: 50px; /* 菜单位置，放在汉堡菜单下方 */
-  left: 10px; /* 菜单位置 */
-  background-color: #4072bc; /* 菜单背景颜色 */
-  border-radius: 4px; /* 圆角 */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* 阴影效果 */
-  z-index: 1000; /* 确保在其他元素之上 */
-  width: 150px; /* 调小菜单宽度 */
-}
+  &-link {
+    color: @white;
+    text-decoration: none;
+    margin-right: 20px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    &-active {
+      background-color: @activecolor;
+      font-weight: 500;
+    }
+  }
 
-.navbar-menu.is-active {
-  display: block; /* 菜单激活时显示 */
-}
+  &-user {
+    display: flex;
+    align-items: center;
+    color: antiquewhite;
 
-.navbar-menu ul {
-  list-style: none;
-  padding: 10px; /* 内边距 */
-  margin: 0;
-}
+    .logout-button {
+      background-color: transparent;
+      color: @white;
+      border: none;
+      cursor: pointer;
+    }
+  }
 
-.navbar-menu li {
-  margin: 5px 0; /* 增加菜单项之间的间距 */
-}
+  &-menu {
+    display: none;
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background-color: @navcolor;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    width: 150px;
 
-.navbar-user {
-  display: flex;
-  align-items: center;
-  color: antiquewhite;
-}
+    &.is-active {
+      display: block;
+    }
 
-.navbar-menu a {
-  color: white;
-  text-decoration: none;
-  display: block; /* 使链接占满整个菜单项 */
-  padding: 2px; /* 增加点击区域 */
-}
+    ul {
+      list-style: none;
+      padding: 10px;
+      margin: 0;
 
-.logout-button {
-  background-color: transparent; /* 透明背景 */
-  color: white; /* 字体颜色 */
-  border: none; /* 去掉边框 */
-  cursor: pointer; /* 鼠标指针 */
-}
+      li {
+        margin: 5px 0;
+      }
+    }
 
-/* 移动端适配 */
-@media (min-width: 769px) {
-  .navbar-toggle {
-    display: none; /* PC 端隐藏汉堡菜单 */
+    a {
+      color: @white;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      
+      &.navbar-link-active {
+        background-color: @activecolor;
+        font-weight: 500;
+      }
+    }
   }
 }
 </style>
