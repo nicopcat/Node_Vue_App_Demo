@@ -282,8 +282,6 @@ onMounted(() => {
 .markdown-body :deep(h4),
 .markdown-body :deep(h5),
 .markdown-body :deep(h6) {
-  margin-top: 32px;
-  margin-bottom: 16px;
   font-weight: 600;
   line-height: 1.25;
   color: #222;
@@ -378,15 +376,43 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .diary-detail {
-    padding: 15px;
+    padding: 10px;
   }
   
   .content h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
   
-  .diary-content {
-    font-size: 15px;
+  .date {
+    font-size: 12px;
+  }
+  
+  .markdown-body :deep(h1) {
+    font-size: 20px;
+  }
+  
+  .markdown-body :deep(h2) {
+    font-size: 18px;
+  }
+  
+  .markdown-body :deep(h3) {
+    font-size: 16px;
+  }
+  
+  .markdown-body :deep(p),
+  .markdown-body :deep(li),
+  .markdown-body :deep(blockquote) {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .markdown-body :deep(code),
+  .markdown-body :deep(pre) {
+    font-size: 12px;
+  }
+  
+  .markdown-preview {
+    padding: 12px;
   }
 }
 </style> 

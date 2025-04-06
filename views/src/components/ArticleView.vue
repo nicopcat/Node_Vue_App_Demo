@@ -10,7 +10,7 @@
       <ul v-else>
         <li v-for="article in articles" :key="article._id" class="diary-item" @click="viewDetail(article._id)">
           <div class="item-header">
-            <h3>{{ article.title }}</h3>
+            <h1>{{ article.title }}</h1>
             <span class="date">{{ formatDate(article.createdAt) }}</span>
           </div>
           <p class="summary markdown-body" v-html="getMarkdownSummary(article.content)"></p>
@@ -132,13 +132,13 @@ const formatDate = (dateString) => {
 // 获取内容摘要
 const getSummary = (content) => {
   if (!content) return ''
-  return content.length > 100 ? content.substring(0, 100) + '...' : content
+  return content.length > 100 ? content.substring(0, 60) + '...' : content
 }
 
 // 获取Markdown格式的摘要
 const getMarkdownSummary = (content) => {
   if (!content) return ''
-  const summary = content.length > 150 ? content.substring(0, 150) + '...' : content
+  const summary = content.length > 150 ? content.substring(0, 100) + '...' : content
   return safeMarked(summary)
 }
 
@@ -326,6 +326,9 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   color: #666;
+  h1{
+    font-size: 1.8em;
+  }
 }
 
 .item-header h3 {
@@ -440,12 +443,40 @@ onMounted(() => {
     padding: 10px;
   }
 
-  .item-header h3 {
-    font-size: 14px;
+  .item-header h1 {
+    font-size: 18px;
+    margin: 0;
   }
 
   .date {
     font-size: 10px;
+  }
+
+  .summary {
+    font-size: 14px;
+  }
+
+  .markdown-body {
+    padding-bottom: 10px;
+  }
+
+  .markdown-body :deep(h1) {
+    font-size: 20px;
+  }
+
+  .markdown-body :deep(h2) {
+    font-size: 18px;
+  }
+
+  .markdown-body :deep(p),
+  .markdown-body :deep(li),
+  .markdown-body :deep(blockquote) {
+    font-size: 14px;
+  }
+
+  .markdown-body :deep(code),
+  .markdown-body :deep(pre) {
+    font-size: 12px;
   }
 }
 
