@@ -83,9 +83,10 @@ import { gfmHeadingId } from 'marked-gfm-heading-id'
 
 // 配置marked
 // 使用插件解决headerIds警告
-marked.use(gfmHeadingId());
+marked.use(gfmHeadingId);
 
-marked.setOptions({
+// 设置marked选项
+const markedOptions = {
   highlight: function(code, lang) {
     if (lang && hljs.getLanguage(lang)) {
       return hljs.highlight(code, { language: lang }).value;
@@ -94,7 +95,18 @@ marked.setOptions({
   },
   breaks: true,  // 自动将换行符转换为<br>标签
   gfm: true      // 启用GitHub风格的Markdown
-});
+};
+
+// 将内容渲染为Markdown，增加错误处理
+const safeMarked = (content) => {
+  if (!content) return '';
+  try {
+    return marked.parse(content, markedOptions);
+  } catch (error) {
+    console.error('Markdown rendering error:', error);
+    return `<p>${content}</p>`;
+  }
+}
 
 const router = useRouter()
 const articles = ref([])
@@ -127,13 +139,13 @@ const getSummary = (content) => {
 const getMarkdownSummary = (content) => {
   if (!content) return ''
   const summary = content.length > 150 ? content.substring(0, 150) + '...' : content
-  return marked(summary)
+  return safeMarked(summary)
 }
 
 // 预览时将编辑内容渲染为Markdown
 const renderedPreview = computed(() => {
   if (!newData.content) return '';
-  return marked(newData.content);
+  return safeMarked(newData.content);
 })
 
 // 获取日记列表
