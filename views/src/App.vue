@@ -73,8 +73,9 @@ const handleClickRouter = () => {
   @activecolor: #3259a1;
 
   .main {
+    height: 100%;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: auto;
   }
 
   .navbar {

@@ -345,7 +345,7 @@ onMounted(() => {
   margin: 10px 0;
   color: #666;
   line-height: 1.5;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .item-footer {
