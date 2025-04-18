@@ -1,40 +1,60 @@
 <template>
-  <div class="diary-detail">
+  <div class="diary-editor">
     <div class="header">
       <el-button @click="goBack">返回</el-button>
-      <div class="actions">
-        <el-button type="primary" @click="goToEdit">编辑</el-button>
-        <el-button type="danger" @click="handleDelete">删除</el-button>
-      </div>
+      <h1>{{ isNew ? '写日记' : '编辑日记' }}</h1>
     </div>
 
     <div class="content" v-loading="loading">
-      <template v-if="diary">
-        <h1>{{ diary.title }}</h1>
-        <div class="meta">
-          <span class="date">{{ formatDate(diary.createdAt) }}</span>
-        </div>
-        <div class="diary-content markdown-body" v-html="renderedContent"></div>
-      </template>
-      <el-empty v-else description="日记不存在" />
+      <el-form :model="formData" label-width="50px">
+        <el-form-item label="标题">
+          <el-input v-model="formData.title" placeholder="请输入日记标题" />
+        </el-form-item>
+        <el-form-item label="内容">
+          <div class="markdown-tips">
+            支持Markdown语法：**粗体**、*斜体*、# 标题、- 列表、```代码块、> 引用等
+          </div>
+          <el-input
+            v-model="formData.content"
+            type="textarea"
+            :rows="15"
+            placeholder="记录今天的心情..."
+            show-word-limit
+            maxlength="3000"
+          />
+          <div class="preview-toggle">
+            <el-switch
+              v-model="showPreview"
+              active-text="预览"
+              inactive-text="编辑"
+            />
+          </div>
+          <div v-if="showPreview" class="markdown-preview markdown-body">
+            <div v-html="renderedPreview"></div>
+          </div>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSave" :loading="submitting">
+            {{ isNew ? '保存' : '更新' }}
+          </el-button>
+          <el-button @click="goBack">取消</el-button>
+        </el-form-item>
+      </el-form>
     </div>
-
-
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getArticle, updateArticle, deleteArticle } from '@/api/article'
+import { ElMessage } from 'element-plus'
+import { getArticle, createArticle, updateArticle } from '@/api/article'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
 import { gfmHeadingId } from 'marked-gfm-heading-id'
 
 // 配置marked
-// 使用插件解决headerIds警告
 marked.use(gfmHeadingId);
 
 // 设置marked选项
@@ -62,25 +82,27 @@ const safeMarked = (content) => {
 
 const route = useRoute()
 const router = useRouter()
-const diary = ref(null)
 const loading = ref(false)
+const submitting = ref(false)
+const showPreview = ref(false)
 
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
+// 判断是新增还是编辑
+const isNew = computed(() => !route.params.id)
 
-// 将内容渲染为Markdown
-const renderedContent = computed(() => {
-  if (!diary.value || !diary.value.content) return '';
-  return safeMarked(diary.value.content);
+// 表单数据
+const formData = reactive({
+  title: '',
+  content: '',
+  _id: ''
 })
 
+// 预览时将编辑内容渲染为Markdown
+const renderedPreview = computed(() => {
+  if (!formData.content) return '';
+  return safeMarked(formData.content);
+})
 
-
-// 获取日记详情
+// 获取日记详情（编辑模式）
 const fetchDiary = async () => {
   const id = route.params.id
   if (!id) return
@@ -88,10 +110,11 @@ const fetchDiary = async () => {
   try {
     loading.value = true
     const res = await getArticle(id)
-    diary.value = res
+    Object.assign(formData, res)
   } catch (err) {
     console.error(err)
     ElMessage.error('获取日记详情失败')
+    router.push('/article')
   } finally {
     loading.value = false
   }
@@ -102,45 +125,50 @@ const goBack = () => {
   router.back()
 }
 
-// 跳转到编辑页面
-const goToEdit = () => {
-  router.push(`/diary/edit/${diary.value._id}`)
-}
+// 保存日记
+const handleSave = async () => {
+  if (!formData.title.trim()) {
+    ElMessage.warning('请输入日记标题')
+    return
+  }
 
-// 删除日记
-const handleDelete = async () => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除日记《${diary.value.title}》?`,
-      '警告',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
+    submitting.value = true
+    const articleData = {
+      title: formData.title.trim(),
+      content: formData.content.trim()
+    }
 
-    loading.value = true
-    await deleteArticle(diary.value._id)
-    ElMessage.success('日记删除成功')
+    if (isNew.value) {
+      // 创建新日记
+      await createArticle(articleData)
+      ElMessage.success('日记创建成功')
+    } else {
+      // 更新日记
+      await updateArticle(formData._id, articleData)
+      ElMessage.success('日记更新成功')
+    }
+    
+    // 返回列表页
     router.push('/article')
   } catch (err) {
-    if (err !== 'cancel') {
-      console.error(err)
-      ElMessage.error('删除日记失败')
-    }
+    console.error(err)
+    ElMessage.error(isNew.value ? '创建日记失败' : '更新日记失败')
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 
 onMounted(() => {
-  fetchDiary()
+  // 如果是编辑模式，获取日记详情
+  if (!isNew.value) {
+    fetchDiary()
+  }
 })
 </script>
 
 <style scoped>
-.diary-detail {
+.diary-editor {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
@@ -150,11 +178,15 @@ onMounted(() => {
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   padding-bottom: 15px;
   border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+  margin: 0 0 0 20px;
+  font-size: 24px;
 }
 
 .content {
@@ -162,31 +194,26 @@ onMounted(() => {
   text-align: left;
 }
 
-.content h1 {
-  margin: 0 0 20px;
-  font-size: 32px;
-  color: #333;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
+.markdown-tips {
+  color: #909399;
+  font-size: 12px;
+  margin-bottom: 8px;
 }
 
-.meta {
-  margin-bottom: 40px;
-  color: #888;
-  font-style: italic;
+.preview-toggle {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.date {
-  font-size: 14px;
-}
-
-.diary-content {
-  line-height: 1.8;
-  color: #444;
-  white-space: pre-wrap;
-  font-size: 16px;
-  text-align: left;
+.markdown-preview {
+  margin-top: 12px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 20px;
+  background-color: #fff;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .markdown-body {
@@ -268,66 +295,40 @@ onMounted(() => {
   margin: 16px 0;
 }
 
-.markdown-tips {
-  color: #909399;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.preview-toggle {
-  margin-top: 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.markdown-preview {
-  margin-top: 12px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 20px;
-  background-color: #fff;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .diary-detail {
+  .diary-editor {
     padding: 10px;
   }
-
-  .content h1 {
-    font-size: 22px;
+  
+  .header h1 {
+    font-size: 20px;
   }
-
-  .date {
-    font-size: 12px;
-  }
-
+  
   .markdown-body :deep(h1) {
     font-size: 20px;
   }
-
+  
   .markdown-body :deep(h2) {
     font-size: 18px;
   }
-
+  
   .markdown-body :deep(h3) {
     font-size: 16px;
   }
-
+  
   .markdown-body :deep(p),
   .markdown-body :deep(li),
   .markdown-body :deep(blockquote) {
     font-size: 14px;
     line-height: 1.6;
   }
-
+  
   .markdown-body :deep(code),
   .markdown-body :deep(pre) {
     font-size: 12px;
   }
-
+  
   .markdown-preview {
     padding: 12px;
   }

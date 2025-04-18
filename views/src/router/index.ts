@@ -4,6 +4,7 @@ import HomeView from '../components/HomeView.vue'
 import TodoView from '@/components/TodoView.vue'
 import ArticleView from '../components/ArticleView.vue'
 import DiaryDetail from '@/components/DiaryDetail.vue'
+import DiaryEditor from '@/components/DiaryEditor.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import { useUserStore } from '@/stores/user'
@@ -21,6 +22,18 @@ const router = createRouter({
       path: '/article',
       name: 'article',
       component: ArticleView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/diary/new',
+      name: 'diary-new',
+      component: DiaryEditor,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/diary/edit/:id',
+      name: 'diary-edit',
+      component: DiaryEditor,
       meta: { requiresAuth: true }
     },
     {

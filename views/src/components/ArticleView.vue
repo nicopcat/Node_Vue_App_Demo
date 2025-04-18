@@ -2,9 +2,9 @@
   <div class="diary-container">
     <div class="header">
       <h1>我的日记</h1>
-      <el-button type="primary" @click="handleNew">写日记</el-button>
+      <el-button type="primary" @click="goToNewDiary">写日记</el-button>
     </div>
-    
+
     <div class="diary-list" v-loading="loading">
       <el-empty v-if="articles.length === 0" description="暂无日记" />
       <ul v-else>
@@ -15,59 +15,14 @@
           </div>
           <p class="summary markdown-body" v-html="getMarkdownSummary(article.content)"></p>
           <div class="item-footer">
-            <el-button link type="primary" @click.stop="edit(article._id)">编辑</el-button>
+            <el-button link type="primary" @click.stop="goToEditDiary(article._id)">编辑</el-button>
             <el-button link type="danger" @click.stop="del(article)">删除</el-button>
           </div>
         </li>
       </ul>
     </div>
 
-    <!-- 编辑/新增对话框 -->
-    <el-dialog 
-      :title="isNew ? '写日记' : '编辑日记'" 
-      v-model="dialogVisible" 
-      width="90%"
-      style="max-width: 600px;"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-    >
-      <el-form :model="newData" label-width="80px">
-        <el-form-item label="标题">
-          <el-input v-model="newData.title" placeholder="请输入日记标题" />
-        </el-form-item>
-        <el-form-item label="内容">
-          <div class="markdown-tips">
-            支持Markdown语法：**粗体**、*斜体*、# 标题、- 列表、```代码块、> 引用等
-          </div>
-          <el-input
-            v-model="newData.content"
-            type="textarea"
-            :rows="10"
-            placeholder="记录今天的心情..."
-            show-word-limit
-            maxlength="3000"
-          />
-          <div class="preview-toggle">
-            <el-switch
-              v-model="showPreview"
-              active-text="预览"
-              inactive-text="编辑"
-            />
-          </div>
-          <div v-if="showPreview" class="markdown-preview markdown-body">
-            <div v-html="renderedPreview"></div>
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submit" :loading="submitting">
-            {{ isNew ? '保存' : '更新' }}
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+
   </div>
 </template>
 
@@ -111,16 +66,6 @@ const safeMarked = (content) => {
 const router = useRouter()
 const articles = ref([])
 const loading = ref(false)
-const submitting = ref(false)
-const dialogVisible = ref(false)
-const isEdit = ref(false)
-const isNew = ref(false)
-const showPreview = ref(false)
-
-const newData = reactive({
-  title: '',
-  content: ''
-})
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -142,11 +87,7 @@ const getMarkdownSummary = (content) => {
   return safeMarked(summary)
 }
 
-// 预览时将编辑内容渲染为Markdown
-const renderedPreview = computed(() => {
-  if (!newData.content) return '';
-  return safeMarked(newData.content);
-})
+
 
 // 获取日记列表
 const fetchArticles = async () => {
@@ -162,53 +103,7 @@ const fetchArticles = async () => {
   }
 }
 
-// 创建新日记
-const handleCreateArticle = async () => {
-  if (!newData.title.trim()) {
-    ElMessage.warning('请输入日记标题')
-    return
-  }
-  
-  try {
-    submitting.value = true
-    const articleData = {
-      title: newData.title.trim(),
-      content: newData.content.trim()
-    }
-    const res = await createArticle(articleData)
-    ElMessage.success('日记创建成功')
-    dialogVisible.value = false
-    resetForm()
-    await fetchArticles()
-  } catch (err) {
-    console.error(err)
-    ElMessage.error('创建日记失败')
-  } finally {
-    submitting.value = false
-  }
-}
 
-// 更新日记
-const handleUpdateArticle = async (id) => {
-  if (!newData.title.trim()) {
-    ElMessage.warning('请输入日记标题')
-    return
-  }
-  
-  try {
-    submitting.value = true
-    const res = await updateArticle(id, newData)
-    ElMessage.success('日记更新成功')
-    dialogVisible.value = false
-    resetForm()
-    await fetchArticles()
-  } catch (err) {
-    console.error(err)
-    ElMessage.error('更新日记失败')
-  } finally {
-    submitting.value = false
-  }
-}
 
 // 删除日记
 const del = async (article) => {
@@ -222,7 +117,7 @@ const del = async (article) => {
         type: 'warning',
       }
     )
-    
+
     loading.value = true
     const res = await deleteArticle(article._id)
     ElMessage.success('日记删除成功')
@@ -237,46 +132,19 @@ const del = async (article) => {
   }
 }
 
-// 提交表单
-const submit = () => {
-  if (isNew.value) {
-    handleCreateArticle()
-  } else {
-    handleUpdateArticle(newData._id)
-  }
+// 跳转到新增日记页面
+const goToNewDiary = () => {
+  router.push('/diary/new')
 }
 
-// 编辑日记
-const edit = (id) => {
-  isEdit.value = true
-  isNew.value = false
-  const foundArticle = articles.value.find(a => a._id === id)
-  Object.assign(newData, foundArticle)
-  showPreview.value = false
-  dialogVisible.value = true
-}
-
-// 新增日记
-const handleNew = () => {
-  isNew.value = true
-  isEdit.value = false
-  resetForm()
-  showPreview.value = false
-  dialogVisible.value = true
+// 跳转到编辑日记页面
+const goToEditDiary = (id) => {
+  router.push(`/diary/edit/${id}`)
 }
 
 // 查看日记详情
 const viewDetail = (id) => {
   router.push(`/diary/${id}`)
-}
-
-// 重置表单
-const resetForm = () => {
-  Object.assign(newData, { 
-    title: '', 
-    content: '',
-    _id: ''
-  })
 }
 
 onMounted(() => {
