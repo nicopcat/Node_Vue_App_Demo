@@ -51,7 +51,7 @@ service.interceptors.response.use(
         case 401:
           // token 过期或无效，清除用户信息并跳转到登录页
           const userStore = useUserStore()
-          userStore.logout()
+          userStore.clearUserInfo()
           window.location.href = '/login'
           break
         case 403:
@@ -75,4 +75,4 @@ service.interceptors.response.use(
   }
 )
 
-export default service 
+export default service

@@ -54,12 +54,14 @@ router.beforeEach((to, from, next) => {
 
   // 如果需要认证且未登录
   if (to.meta.requiresAuth && !userStore.isLoggedIn()) {
-    // 直接重定向到登录页，不再包含redirect参数
-    next('/login')
+    // 重定向到登录页，并保存原始路径作为重定向参数
+    next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
-    // 如果已登录且要访问登录/注册页，重定向到首页
+    // 如果已登录且要访问登录/注册页
     if (userStore.isLoggedIn() && (to.path === '/login' || to.path === '/register')) {
-      next('/')
+      // 如果有重定向参数，则重定向到该参数指定的路径
+      const redirectPath = to.query.redirect as string || '/'
+      next(redirectPath)
     } else {
       next()
     }

@@ -21,7 +21,7 @@ const isMobile = computed(() => {
 
 const handleLogin = async () => {
   if (isSubmitting.value) return
-  
+
   if (!loginForm.value.username || !loginForm.value.password) {
     ElMessage.warning('请输入用户名和密码')
     return
@@ -33,9 +33,10 @@ const handleLogin = async () => {
     userStore.setToken(token)
     userStore.setUserInfo(user)
     ElMessage.success('登录成功')
-    
-    // 登录成功后直接跳转到首页
-    router.push('/')
+
+    // 登录成功后跳转到重定向参数指定的路径，如果没有则跳转到首页
+    const redirectPath = route.query.redirect as string || '/'
+    router.push(redirectPath)
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')
   } finally {
@@ -53,16 +54,16 @@ const handleLogin = async () => {
           <el-input v-model="loginForm.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input 
-            v-model="loginForm.password" 
-            type="password" 
+          <el-input
+            v-model="loginForm.password"
+            type="password"
             placeholder="请输入密码"
             @keyup.enter="handleLogin"
           />
         </el-form-item>
         <el-form-item style="margin-top: 2rem;">
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             @click="handleLogin"
             :loading="isSubmitting"
             :disabled="isSubmitting"
@@ -125,14 +126,14 @@ const handleLogin = async () => {
     width: 100%;
     margin: 5px 0;
   }
-  
+
   :deep(.el-form-item__content) {
     display: flex;
     flex-direction: column;
   }
-  
+
   h2 {
     font-size: 20px;
   }
 }
-</style> 
+</style>
